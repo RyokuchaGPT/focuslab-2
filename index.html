@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6750A4">
+  <meta name="description" content="集中状態を設計・維持・回復するためのサウンドツール">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Focus Lab">
+  
+  <title>Google Focus Lab</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  
+  <link rel="stylesheet" href="css/material-tokens.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Top App Bar -->
+    <header class="top-app-bar" role="banner">
+      <div class="top-app-bar__leading">
+        <button class="icon-button" id="menuBtn" aria-label="メニュー">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+        </button>
+      </div>
+      <h1 class="top-app-bar__title">Focus Lab</h1>
+      <div class="top-app-bar__actions">
+        <button class="icon-button" id="settingsBtn" aria-label="設定">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" role="main">
+      <!-- Session Status Card -->
+      <section class="session-card surface-container" aria-label="セッション状態">
+        <div class="session-card__header">
+          <span class="session-card__label">現在のプロファイル</span>
+          <span class="session-card__name" id="currentProfileName">未選択</span>
+        </div>
+        <div class="session-card__timer">
+          <span class="timer-display" id="timerDisplay">00:00</span>
+        </div>
+        <div class="session-card__status">
+          <span class="status-indicator" id="statusIndicator"></span>
+          <span class="status-text" id="statusText">待機中</span>
+        </div>
+      </section>
+
+      <!-- Timeline Card -->
+      <section class="timeline-card surface-container" aria-label="タイムライン">
+        <div class="timeline-header">
+          <h2 class="timeline-title">タイムライン</h2>
+          <span class="timeline-duration" id="timelineDuration">25分</span>
+        </div>
+        <div class="timeline-container" id="timelineContainer">
+          <div class="timeline-track" id="timelineTrack">
+            <div class="timeline-playhead" id="timelinePlayhead"></div>
+            <div class="timeline-layers">
+              <div class="timeline-layer" data-layer="baseFrequency">
+                <canvas class="layer-canvas" id="baseFrequencyCanvas"></canvas>
+              </div>
+              <div class="timeline-layer" data-layer="texture">
+                <canvas class="layer-canvas" id="textureCanvas"></canvas>
+              </div>
+              <div class="timeline-layer" data-layer="modulation">
+                <canvas class="layer-canvas" id="modulationCanvas"></canvas>
+              </div>
+              <div class="timeline-layer" data-layer="silence">
+                <canvas class="layer-canvas" id="silenceCanvas"></canvas>
+              </div>
+            </div>
+            <div class="timeline-ruler" id="timelineRuler"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Layer Editor (Accordion) -->
+      <section class="layer-editor" aria-label="レイヤーエディター">
+        <!-- Base Frequency Layer -->
+        <div class="layer-accordion" data-layer="baseFrequency">
+          <button class="layer-accordion__header" aria-expanded="false">
+            <span class="layer-accordion__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+              </svg>
+            </span>
+            <span class="layer-accordion__title">ベース周波数</span>
+            <span class="layer-accordion__expand">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+              </svg>
+            </span>
+          </button>
+          <div class="layer-accordion__content">
+            <div class="layer-editor__canvas-container">
+              <canvas class="curve-editor" id="baseFrequencyEditor"></canvas>
+            </div>
+            <div class="layer-editor__controls">
+              <div class="segmented-button-group" role="radiogroup" aria-label="周波数レベル">
+                <button class="segmented-button" role="radio" aria-checked="false" data-value="low">低め</button>
+                <button class="segmented-button" role="radio" aria-checked="true" data-value="normal">標準</button>
+                <button class="segmented-button" role="radio" aria-checked="false" data-value="high">高め</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Texture Layer -->
+        <div class="layer-accordion" data-layer="texture">
+          <button class="layer-accordion__header" aria-expanded="false">
+            <span class="layer-accordion__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </span>
+            <span class="layer-accordion__title">テクスチャ</span>
+            <span class="layer-accordion__expand">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+              </svg>
+            </span>
+          </button>
+          <div class="layer-accordion__content">
+            <div class="layer-editor__canvas-container">
+              <canvas class="density-editor" id="textureEditor"></canvas>
+            </div>
+            <div class="layer-editor__controls">
+              <div class="slider-control">
+                <span class="slider-label">なめらか</span>
+                <input type="range" class="slider" id="textureSlider" min="0" max="100" value="30" aria-label="テクスチャ密度">
+                <span class="slider-label">ざらつき</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modulation Layer -->
+        <div class="layer-accordion" data-layer="modulation">
+          <button class="layer-accordion__header" aria-expanded="false">
+            <span class="layer-accordion__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5-2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/>
+              </svg>
+            </span>
+            <span class="layer-accordion__title">モジュレーション</span>
+            <span class="layer-accordion__expand">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+              </svg>
+            </span>
+          </button>
+          <div class="layer-accordion__content">
+            <div class="layer-editor__controls">
+              <div class="chip-group" role="radiogroup" aria-label="変調タイプ">
+                <button class="chip chip--selected" role="radio" aria-checked="true" data-value="stable">安定</button>
+                <button class="chip" role="radio" aria-checked="false" data-value="gentle">ゆらぎ</button>
+                <button class="chip" role="radio" aria-checked="false" data-value="irregular">不規則</button>
+              </div>
+              <div class="intensity-control">
+                <span class="intensity-label">強度</span>
+                <div class="intensity-dots" role="slider" aria-label="強度" aria-valuemin="1" aria-valuemax="5" aria-valuenow="2" tabindex="0">
+                  <span class="intensity-dot active" data-value="1"></span>
+                  <span class="intensity-dot active" data-value="2"></span>
+                  <span class="intensity-dot" data-value="3"></span>
+                  <span class="intensity-dot" data-value="4"></span>
+                  <span class="intensity-dot" data-value="5"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Silence Layer -->
+        <div class="layer-accordion" data-layer="silence">
+          <button class="layer-accordion__header" aria-expanded="false">
+            <span class="layer-accordion__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M18 9.5V6c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-3.5l4 4v-13l-4 4z"/>
+              </svg>
+            </span>
+            <span class="layer-accordion__title">無音区間</span>
+            <span class="layer-accordion__expand">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+              </svg>
+            </span>
+          </button>
+          <div class="layer-accordion__content">
+            <div class="silence-editor" id="silenceEditor">
+              <div class="silence-blocks" id="silenceBlocks">
+                <!-- Silence blocks will be rendered here -->
+              </div>
+              <button class="text-button" id="addSilenceBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                無音を追加
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pro Mode Toggle -->
+      <section class="pro-mode-section surface-container">
+        <div class="pro-mode-toggle">
+          <div class="pro-mode-info">
+            <span class="pro-mode-label">Adaptive Focus</span>
+            <span class="pro-mode-badge">Pro</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="proModeToggle" aria-label="Adaptive Focus Pro モード">
+            <span class="switch__track"></span>
+            <span class="switch__thumb"></span>
+          </label>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Action Bar -->
+    <footer class="bottom-action-bar" role="contentinfo">
+      <button class="fab fab--secondary" id="profilesBtn" aria-label="プロファイル一覧">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+        </svg>
+      </button>
+      <button class="fab fab--primary" id="playPauseBtn" aria-label="再生">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" id="playIcon">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" id="pauseIcon" style="display: none;">
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+      </button>
+      <button class="fab fab--secondary" id="saveBtn" aria-label="保存">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </svg>
+      </button>
+    </footer>
+
+    <!-- Side Navigation Drawer -->
+    <div class="nav-drawer-scrim" id="navDrawerScrim"></div>
+    <nav class="nav-drawer" id="navDrawer" role="navigation" aria-label="メインナビゲーション">
+      <div class="nav-drawer__header">
+        <img src="icons/icon-72.svg" alt="" class="nav-drawer__logo">
+        <span class="nav-drawer__title">Focus Lab</span>
+      </div>
+      <ul class="nav-drawer__list">
+        <li>
+          <button class="nav-drawer__item nav-drawer__item--active" data-view="editor">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+            <span>エディター</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-drawer__item" data-view="profiles">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+            </svg>
+            <span>プロファイル</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-drawer__item" data-view="history">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+            </svg>
+            <span>履歴</span>
+          </button>
+        </li>
+      </ul>
+      <div class="nav-drawer__divider"></div>
+      <ul class="nav-drawer__list">
+        <li>
+          <button class="nav-drawer__item" data-action="settings">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+            <span>設定</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Profiles Modal -->
+    <div class="modal-scrim" id="profilesModalScrim"></div>
+    <div class="modal" id="profilesModal" role="dialog" aria-labelledby="profilesModalTitle" aria-modal="true">
+      <div class="modal__header">
+        <h2 class="modal__title" id="profilesModalTitle">プロファイル</h2>
+        <button class="icon-button" id="closeProfilesModal" aria-label="閉じる">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__content">
+        <ul class="profile-list" id="profileList">
+          <!-- Profiles will be rendered here -->
+        </ul>
+        <button class="text-button" id="newProfileBtn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          新規プロファイル
+        </button>
+      </div>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="modal-scrim" id="saveModalScrim"></div>
+    <div class="modal" id="saveModal" role="dialog" aria-labelledby="saveModalTitle" aria-modal="true">
+      <div class="modal__header">
+        <h2 class="modal__title" id="saveModalTitle">プロファイルを保存</h2>
+        <button class="icon-button" id="closeSaveModal" aria-label="閉じる">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__content">
+        <div class="text-field">
+          <label for="profileNameInput" class="text-field__label">プロファイル名</label>
+          <input type="text" id="profileNameInput" class="text-field__input" placeholder="集中プロファイル">
+        </div>
+        <div class="text-field">
+          <label for="durationSelect" class="text-field__label">セッション時間</label>
+          <select id="durationSelect" class="text-field__input">
+            <option value="900">15分</option>
+            <option value="1500" selected>25分</option>
+            <option value="1800">30分</option>
+            <option value="2700">45分</option>
+            <option value="3600">60分</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal__actions">
+        <button class="text-button" id="cancelSaveBtn">キャンセル</button>
+        <button class="filled-button" id="confirmSaveBtn">保存</button>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-scrim" id="settingsModalScrim"></div>
+    <div class="modal" id="settingsModal" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
+      <div class="modal__header">
+        <h2 class="modal__title" id="settingsModalTitle">設定</h2>
+        <button class="icon-button" id="closeSettingsModal" aria-label="閉じる">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__content">
+        <div class="settings-item">
+          <div class="settings-item__text">
+            <span class="settings-item__label">マスターボリューム</span>
+          </div>
+          <input type="range" class="slider" id="masterVolumeSlider" min="0" max="100" value="70" aria-label="マスターボリューム">
+        </div>
+        <div class="settings-item">
+          <div class="settings-item__text">
+            <span class="settings-item__label">セッション終了通知</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="notificationToggle" checked aria-label="セッション終了通知">
+            <span class="switch__track"></span>
+            <span class="switch__thumb"></span>
+          </label>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item__text">
+            <span class="settings-item__label">データを削除</span>
+            <span class="settings-item__description">すべてのプロファイルと履歴を削除します</span>
+          </div>
+          <button class="text-button text-button--error" id="clearDataBtn">削除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Complete Message -->
+    <div class="snackbar" id="sessionCompleteSnackbar" role="alert" aria-live="polite">
+      <span class="snackbar__text"></span>
+      <button class="snackbar__action" id="snackbarDismiss">閉じる</button>
+    </div>
+  </div>
+
+  <script src="js/data-model.js"></script>
+  <script src="js/audio-engine.js"></script>
+  <script src="js/ui-controller.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
